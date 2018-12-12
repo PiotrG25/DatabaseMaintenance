@@ -1,12 +1,8 @@
 package pl.PiotrG25.sql;
 
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.*;
 
 public class SQL {
 
@@ -33,26 +29,49 @@ public class SQL {
 
 
     /*Insert part of this project*/
-    public Insert insert(String insertStatement){
-        return new Insert(insertStatement);
+    public Insert insert(){
+        return new Insert();
     }
 
     public class Insert{
-        private String insertStatement;
+        private String insertStatement = "INSERT INTO tab1 (?) VALUES (?);";
+        private Map<String, String> columnValue = new HashMap<>();
 
-        public Insert(String insertStatement){
-            this.insertStatement = insertStatement;
+        public Insert(){}
+
+        public Insert into(String column, String value){
+            columnValue.put(column, value);
+            return this;
         }
 
         public void execute(){
-            try {
+            try{
                 Class.forName("com.mysql.cj.jdbc.Driver");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
-            try(Connection conn = DriverManager.getConnection(connectionString, connectionUser, connectionPassword);){
+            try(Connection conn = DriverManager.getConnection(connectionString, connectionUser, connectionPassword);
+                PreparedStatement pstm = conn.prepareStatement(insertStatement);){
 
-                System.out.println("Hellow world!");
+                String columns = "";
+                String values = "";
+                Iterator iterator = columnValue.entrySet().iterator();
+                while(iterator.hasNext()){
+                    Map.Entry<String, String> mentry = (Map.Entry<String, String>)iterator.next();
+                    columns += mentry.getKey() + ", ";
+                    values += mentry.getValue() + ", ";
+                }
+
+                columns = columns.substring(0, columns.length() - 2);
+                values = values.substring(0, values.length() - 2);
+
+                System.out.println(columns);
+                System.out.println(values);
+
+                pstm.setString(1, columns);//wrong
+                pstm.setString(2, values);//wrong
+
+                pstm.executeUpdate();
 
             }catch(SQLException e){
                 e.printStackTrace();
